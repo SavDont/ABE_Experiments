@@ -1,10 +1,11 @@
 from psychopy import visual, core, event
-from numpy import random
 import glob, os
 import numpy as np
+import random
 
 #global variables presented here
-
+colorRed = [1, -1, -1] 
+colorGrn = [-1, 1, -1]
 
 
 # get_keypress() - Takes no arguments and returns any possible keypresses. 
@@ -43,26 +44,35 @@ def get_images(dir):
         imgList.append(file)
     return imgList
 
-# encoding_loop(win, stimImages) - Takes a window argument and a list of 
-# images to use as stimuli. This function essentially runs the encoding 
-# and detection tasks of the experiment. 
-def encoding_loop(win, stimImages):
-    #generates a red square
-    redSq = visual.Rect(
+# gen_square(win, color) - Takes a window argument and a color
+# to create a 10x10 px visual square of the color provided
+# Requires: [color] must be a three value list representing color
+# as documented in the psychopy library
+def gen_square(win, color):
+    return visual.Rect(
         win=win,
         units="pix",
         width=10,
         height=10,
-        fillColor=[1, -1, -1],
-        lineColor=[1, -1, -1])
-    #Below loop runs through each image in the stimImages argument and runs the procedure on it
-    for stim in stimImages:
-        img = visual.ImageStim(win=win, image=stim, units="pix") #Image presented as a Stim
-        tex = np.array([
+        fillColor=color,
+        lineColor=color)
+
+# encoding_loop(win, stimImages) - Takes a window argument and a list of 
+# images to use as stimuli. This function essentially runs the encoding 
+# and detection tasks of the experiment. 
+def encoding_loop(win, stimImages):
+    redSq = gen_square(win, colorRed) #generates a red square
+    greenSq = gen_square(win, colorGrn) #generates a green square
+    targets = random.sample(stimImages, 40)
+    tex = np.array([
             [1, 0],
             [0, -1]
             ]) #numpy array used to make the texture for scrambled image
-        scramble = visual.GratingStim(win, tex=tex, mask = None, size=256) #scrambled image
+    scramble = visual.GratingStim(win, tex=tex, mask = None, size=256) #scrambled image
+    
+    #Below loop runs through each image in the stimImages argument and runs the procedure on it
+    for stim in stimImages:
+        img = visual.ImageStim(win=win, image=stim, units="pix") #Image presented as a Stim
         
         clock = core.Clock()
         while clock.getTime() <= 1.0:
@@ -74,7 +84,10 @@ def encoding_loop(win, stimImages):
                 win.flip()
             elif 0.050 <= clock.getTime() < 0.150:
                 img.draw()
-                redSq.draw() #target presented briefly (100ms)
+                if stim in targets:
+                    redSq.draw() #target presented briefly (100ms)
+                else:
+                    greenSq.draw() #distractor presented briefly (100ms)
                 win.flip()
             elif 0.150 <= clock.getTime() < 0.2:
                 img.draw()
@@ -88,6 +101,7 @@ def main():
     win = init_window()
     oldImages = get_images("./Stimuli/Old_Images")
     encoding_loop(win, oldImages)
+    #insert shuffling code here
 
 # Below two lines of python actually run the main function
 if __name__ == "__main__":
