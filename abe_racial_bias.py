@@ -1,4 +1,4 @@
-from psychopy import visual, core, event
+from psychopy import visual, core, event, gui
 import glob, os
 import numpy as np
 import random
@@ -17,6 +17,16 @@ def get_keypress():
     else:
         return None
 
+# user_input() - Takes no argument but it displays a user input dialog
+# requesting for subject number
+# Requires: User input must be an int
+def user_input():
+    dlg = gui.Dlg()
+    dlg.addField("Subject Num:")
+    
+    dlg.show()
+    return int(dlg.data[0])
+
 # shutdown(win) - Takes the current active window as an argument and 
 # closes the window and cleanly exits the current script. Doesn't return
 # a value
@@ -34,14 +44,41 @@ def init_window():
     )
     return wd
 
-# get_images(dir) - Takes a string argument for directory and returns
-# a list of all JPEG images within that directory
+# get_images(dir) - Takes a string argument for directory and a boolean argument 
+# for group number and returns a shuffled tuple list for all the JPEG images within
+# that directory where the first element of the tuple is the file name and the 
+# second element is a boolean value indicating whether this image is a target or
+# not.
 # Requires: [dir] must be a valid directory
-def get_images(dir):
+def get_images(dir, groupOne):
     os.chdir(dir)
+    
+    whiteImages = []
+    for file in glob.glob("w*.jpg"):
+        whiteImages.append(file)
+        
+    blackImages = []
+    for file in glob.glob("b*.jpg"):
+        blackImages.append(file)
+        
+    if groupOne:
+        #targets to appear on 70% of black faces and 30% of white
+        targetBlackImages = random.sample(blackImages, 28)
+        targetWhiteImages = random.sample(whiteImages, 12)
+    else:
+        #targets to appear on 30% of black faces and 70% of white
+        targetBlackImages = random.sample(blackImages, 12)
+        targetWhiteImages = random.sample(whiteImages, 28)
+        
+    allImages = whiteImages + blackImages
     imgList = []
-    for file in glob.glob("*.jpg"):
-        imgList.append(file)
+    for face in allImages:
+        if face in targetBlackImages or face in targetWhiteImages:
+            imgList.append((face, True))# target image so we set True
+        else:
+            imgList.append((face, False))
+    
+    random.shuffle(imgList)
     return imgList
 
 # gen_square(win, color) - Takes a window argument and a color
@@ -58,12 +95,12 @@ def gen_square(win, color):
         lineColor=color)
 
 # encoding_loop(win, stimImages) - Takes a window argument and a list of 
-# images to use as stimuli. This function essentially runs the encoding 
-# and detection tasks of the experiment. 
-def encoding_loop(win, stimImages):
+# images to use as stimuli. It also takes two boolean values representing the
+# group number and the target stimulus to use. This function essentially runs 
+# the encoding and detection tasks of the experiment. 
+def encoding_loop(win, stimImages, groupOne, redTarget):
     redSq = gen_square(win, colorRed) #generates a red square
     greenSq = gen_square(win, colorGrn) #generates a green square
-    targets = random.sample(stimImages, 40)
     tex = np.array([
             [1, 0],
             [0, -1]
@@ -71,24 +108,24 @@ def encoding_loop(win, stimImages):
     scramble = visual.GratingStim(win, tex=tex, mask = None, size=256) #scrambled image
     
     #Below loop runs through each image in the stimImages argument and runs the procedure on it
-    for stim in stimImages:
+    for (stim, target) in stimImages:
         img = visual.ImageStim(win=win, image=stim, units="pix") #Image presented as a Stim
         
         clock = core.Clock()
         while clock.getTime() <= 1.0:
             key = get_keypress()
-            if key == 'q':
+            if key =='q':
                 shutdown(win) #sets up q as 'escape' character to quit program
             if 0.0 <= clock.getTime() < .050:
                 img.draw()
                 win.flip()
             elif 0.050 <= clock.getTime() < 0.150:
                 img.draw()
-                if stim in targets:
-                    redSq.draw() #target presented briefly (100ms)
+                if (target and redTarget) or (not target and not redTarget):
+                    redSq.draw()
                 else:
-                    greenSq.draw() #distractor presented briefly (100ms)
-                win.flip()
+                    greenSq.draw()
+                win.flip() #target/distractor presented for 100ms
             elif 0.150 <= clock.getTime() < 0.2:
                 img.draw()
                 win.flip()
@@ -98,9 +135,20 @@ def encoding_loop(win, stimImages):
 
 # main() - Takes no arguments and runs the main program
 def main():
+    subjectNum = user_input()
     win = init_window()
-    oldImages = get_images("./Stimuli/Old_Images")
-    encoding_loop(win, oldImages)
+    
+    if subjectNum % 4 <= 1:
+        groupOne = True
+    else:
+        groupOne = False
+    oldImages = get_images("./Stimuli/Old_Images", groupOne)
+    
+    if subjectNum % 2 == 1:
+        redTarget = True
+    else:
+        redTarget = False
+    encoding_loop(win, oldImages, groupOne, redTarget)
     #insert shuffling code here
 
 # Below two lines of python actually run the main function
