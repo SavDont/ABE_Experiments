@@ -2,6 +2,7 @@ from psychopy import visual, core, event, gui
 import glob, os
 import numpy as np
 import random
+import pprint
 
 #global variables presented here
 colorRed = [1, -1, -1] 
@@ -17,7 +18,7 @@ def get_keypress():
     else:
         return None
 
-# user_input() - Takes no argument but it displays a user input dialog
+# user_input() - Takes no argument and it displays a user input dialog
 # requesting for subject number
 # Requires: User input must be an int
 def user_input():
@@ -25,7 +26,11 @@ def user_input():
     dlg.addField("Subject Num:")
     
     dlg.show()
-    return int(dlg.data[0])
+    try:
+        return int(dlg.data[0])
+    except ValueError:
+        print "ERROR: No input entered for subject number"
+        core.quit()
 
 # shutdown(win) - Takes the current active window as an argument and 
 # closes the window and cleanly exits the current script. Doesn't return
@@ -79,7 +84,34 @@ def get_images(dir, groupOne):
             imgList.append((face, False))
     
     random.shuffle(imgList)
+    os.chdir("../..")
     return imgList
+
+# meta_data_write(win, stimImages, subjectNum, groupOne) - Takes the window,
+# list of stimulus images, subject number, and group number as arguments
+# This function writes the image data to a file named to identify the group
+# number and the subject number
+def meta_data_write(win, stimImages, subjectNum, groupOne):
+    data_path = ("./Data/P"+str(subjectNum)+"_ABE_Racial_Bias_Exp_Meta_Group"+
+        str((not groupOne)+1)+".txt")# labels the file
+    if not os.path.exists(data_path):
+        data = []
+        for (stim, target) in stimImages:
+            data.append(
+                [
+                    stim,
+                    target
+                ]
+            )
+        np.savetxt(
+            data_path,
+            data,
+            fmt = "%s   %s"
+            
+        )
+    else:
+        print "ERROR: Filename "+data_path+" already exists"
+        shutdown(win)
 
 # gen_square(win, color) - Takes a window argument and a color
 # to create a 10x10 px visual square of the color provided
@@ -96,9 +128,10 @@ def gen_square(win, color):
 
 # encoding_loop(win, stimImages) - Takes a window argument and a list of 
 # images to use as stimuli. It also takes two boolean values representing the
-# group number and the target stimulus to use. This function essentially runs 
+# group number and the target stimulus to use. Lastly, takes in a string
+# representing the base directory for the images. This function essentially runs 
 # the encoding and detection tasks of the experiment. 
-def encoding_loop(win, stimImages, groupOne, redTarget):
+def encoding_loop(win, stimImages, groupOne, redTarget, base_dir):
     redSq = gen_square(win, colorRed) #generates a red square
     greenSq = gen_square(win, colorGrn) #generates a green square
     tex = np.array([
@@ -109,7 +142,7 @@ def encoding_loop(win, stimImages, groupOne, redTarget):
     
     #Below loop runs through each image in the stimImages argument and runs the procedure on it
     for (stim, target) in stimImages:
-        img = visual.ImageStim(win=win, image=stim, units="pix") #Image presented as a Stim
+        img = visual.ImageStim(win=win, image=base_dir+stim, units="pix") #Image presented as a Stim
         
         clock = core.Clock()
         while clock.getTime() <= 1.0:
@@ -143,12 +176,13 @@ def main():
     else:
         groupOne = False
     oldImages = get_images("./Stimuli/Old_Images", groupOne)
+    meta_data_write(win, oldImages, subjectNum, groupOne)
     
     if subjectNum % 2 == 1:
         redTarget = True
     else:
         redTarget = False
-    encoding_loop(win, oldImages, groupOne, redTarget)
+    encoding_loop(win, oldImages, groupOne, redTarget,"./Stimuli/Old_Images/")
     #insert shuffling code here
 
 # Below two lines of python actually run the main function
