@@ -1,4 +1,4 @@
-from psychopy import visual, core, event, gui
+from psychopy import visual, core, event, gui, event
 import glob, os
 import numpy as np
 import random
@@ -7,6 +7,10 @@ import pprint
 #global variables presented here
 colorRed = [1, -1, -1] 
 colorGrn = [-1, 1, -1]
+textureMask = np.array([
+            [1, 0],
+            [0, -1]
+            ]) #numpy array used to make the texture for scrambled image
 
 
 # get_keypress() - Takes no arguments and returns any possible keypresses. 
@@ -87,28 +91,27 @@ def get_images(dir, groupOne):
     os.chdir("../..")
     return imgList
 
-# meta_data_write(win, stimImages, subjectNum, groupOne) - Takes the window,
-# list of stimulus images, subject number, and group number as arguments
-# This function writes the image data to a file named to identify the group
-# number and the subject number
-def meta_data_write(win, stimImages, subjectNum, groupOne):
-    data_path = ("./Data/P"+str(subjectNum)+"_ABE_Racial_Bias_Exp_Meta_Group"+
-        str((not groupOne)+1)+".txt")# labels the file
+# meta_data_write(win, data, subjectNum, groupOne, meta) - Takes the window,
+# array of all data, subject number, and group number as arguments
+# This function writes the data to a file named to identify the group
+# number and the subject number as well as whether or not this is meta data or 
+# stimulus data from the experiment
+def data_write(win, data, subjectNum, groupOne, meta):
+    if meta:
+        data_path = ("./Data/P"+str(subjectNum)+"_ABE_Racial_Bias_Exp_Meta_Group"+
+            str((not groupOne)+1)+".txt")# labels the file
+    else:
+        data_path = ("./Data/P"+str(subjectNum)+"_ABE_Racial_Bias_Exp_Data_Group"+
+        str((not groupOne)+1)+".txt")
     if not os.path.exists(data_path):
-        data = []
-        for (stim, target) in stimImages:
-            data.append(
-                [
-                    stim,
-                    target
-                ]
-            )
-        np.savetxt(
-            data_path,
-            data,
-            fmt = "%s   %s"
-            
-        )
+        file = open(data_path, "w")
+        textString = ""
+        for line in data:
+            lineString = ""
+            for element in line:
+                lineString += str(element)+'\t'
+            file.write(lineString+'\n')
+        file.close()
     else:
         print "ERROR: Filename "+data_path+" already exists"
         shutdown(win)
@@ -131,40 +134,60 @@ def gen_square(win, color):
 # group number and the target stimulus to use. Lastly, takes in a string
 # representing the base directory for the images. This function essentially runs 
 # the encoding and detection tasks of the experiment. 
-def encoding_loop(win, stimImages, groupOne, redTarget, base_dir):
+def encoding_loop(win, stimImages, groupOne, redTarget, subjectNum, base_dir):
     redSq = gen_square(win, colorRed) #generates a red square
     greenSq = gen_square(win, colorGrn) #generates a green square
-    tex = np.array([
-            [1, 0],
-            [0, -1]
-            ]) #numpy array used to make the texture for scrambled image
-    scramble = visual.GratingStim(win, tex=tex, mask = None, size=256) #scrambled image
     
+    scramble = visual.GratingStim(win, tex=textureMask, mask = None, size=256) #scrambled image
+    detectionData = []
+    clock = core.Clock()
     #Below loop runs through each image in the stimImages argument and runs the procedure on it
     for (stim, target) in stimImages:
         img = visual.ImageStim(win=win, image=base_dir+stim, units="pix") #Image presented as a Stim
         
-        clock = core.Clock()
-        while clock.getTime() <= 1.0:
+        reactionTimes = [] #times when user reacted to the stim
+        
+        img.draw()
+        win.flip() #we want to immediately present the stim and note down the presentation time
+        
+        stimPresentation = clock.getTime()
+        stimExit = 0.0
+        stimTimer = core.Clock()
+        while stimTimer.getTime() <= 1.0:
             key = get_keypress()
-            if key =='q':
-                shutdown(win) #sets up q as 'escape' character to quit program
-            if 0.0 <= clock.getTime() < .050:
+            if key =='escape':
+                data_write(win, detectionData, subjectNum, groupOne, False) #writes data before quitting
+                shutdown(win) #sets up 'Esc' as a character to quit program
+            elif key == 'space':
+                reactionTimes.append(clock.getTime())
+            
+            if 0.0 <= stimTimer.getTime() < .050:
                 img.draw()
                 win.flip()
-            elif 0.050 <= clock.getTime() < 0.150:
+            elif 0.050 <= stimTimer.getTime() < 0.150:
                 img.draw()
                 if (target and redTarget) or (not target and not redTarget):
                     redSq.draw()
                 else:
                     greenSq.draw()
                 win.flip() #target/distractor presented for 100ms
-            elif 0.150 <= clock.getTime() < 0.2:
+            elif 0.150 <= stimTimer.getTime() < 0.2:
                 img.draw()
                 win.flip()
+                stimExit = clock.getTime()
             else:
                 scramble.draw() #scrambled image presented for remaining 800ms
                 win.flip()
+        #attach results of experiment to dataset
+        detectionData.append(
+            [
+                stim,
+                target,
+                stimPresentation,
+                stimExit
+            ])
+        detectionData[len(detectionData)-1].extend(reactionTimes)
+    data_write(win, detectionData, subjectNum, groupOne, False)
 
 # main() - Takes no arguments and runs the main program
 def main():
@@ -176,13 +199,22 @@ def main():
     else:
         groupOne = False
     oldImages = get_images("./Stimuli/Old_Images", groupOne)
-    meta_data_write(win, oldImages, subjectNum, groupOne)
+    
+    metaData = []
+    for (stim, target) in oldImages:
+        metaData.append(
+            [
+                stim,
+                target
+            ]
+        )
+    data_write(win, metaData, subjectNum, groupOne, True)
     
     if subjectNum % 2 == 1:
         redTarget = True
     else:
         redTarget = False
-    encoding_loop(win, oldImages, groupOne, redTarget,"./Stimuli/Old_Images/")
+    encoding_loop(win, oldImages, groupOne, redTarget, subjectNum, "./Stimuli/Old_Images/")
     #insert shuffling code here
 
 # Below two lines of python actually run the main function
