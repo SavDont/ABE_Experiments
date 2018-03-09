@@ -3,15 +3,11 @@ import glob, os
 import numpy as np
 import random
 import pprint
+import image_slicer
 
 #global variables presented here
 colorRed = [1, -1, -1] 
 colorGrn = [-1, 1, -1]
-textureMask = np.array([
-            [1, 0],
-            [0, -1]
-            ]) #numpy array used to make the texture for scrambled image
-
 
 # get_keypress() - Takes no arguments and returns any possible keypresses. 
 # If no keypress is detected, returns None
@@ -91,6 +87,22 @@ def get_images(dir, groupOne):
     os.chdir("../..")
     return imgList
 
+# create_scramble(images, dir) - Takes a tuple list of images and a directory 
+# to find the images. Function saves a scrambled version of the image to the 
+# saveDir. The scrambling process involves splitting the image into 16x16 tiles
+# for a 256px image and shuffling the positions
+def create_scramble(images, dir, saveDir):
+    for (stim, target) in images:
+        tiles = image_slicer.slice(dir+stim, 256, save=False)
+        tiles_list = list(tiles)
+        random.shuffle(tiles_list)
+        count = 0
+        for tile in tiles:
+            tile.image = tiles_list[count].image
+            count += 1
+        scramble = image_slicer.join(tiles)
+        scramble.save(saveDir+stim)
+
 # meta_data_write(win, data, subjectNum, groupOne, meta) - Takes the window,
 # array of all data, subject number, and group number as arguments
 # This function writes the data to a file named to identify the group
@@ -134,17 +146,16 @@ def gen_square(win, color):
 # group number and the target stimulus to use. Lastly, takes in a string
 # representing the base directory for the images. This function essentially runs 
 # the encoding and detection tasks of the experiment. 
-def encoding_loop(win, stimImages, groupOne, redTarget, subjectNum, base_dir):
+def encoding_loop(win, stimImages, groupOne, redTarget, subjectNum, stim_dir, scramble_dir):
     redSq = gen_square(win, colorRed) #generates a red square
     greenSq = gen_square(win, colorGrn) #generates a green square
     
-    scramble = visual.GratingStim(win, tex=textureMask, mask = None, size=256) #scrambled image
     detectionData = []
     clock = core.Clock()
     #Below loop runs through each image in the stimImages argument and runs the procedure on it
     for (stim, target) in stimImages:
-        img = visual.ImageStim(win=win, image=base_dir+stim, units="pix") #Image presented as a Stim
-        
+        img = visual.ImageStim(win=win, image=stim_dir+stim, units="pix") #Image presented as a Stim
+        scramble = visual.ImageStim(win=win, image=scramble_dir+stim, units="pix")
         reactionTimes = [] #times when user reacted to the stim
         
         img.draw()
@@ -181,6 +192,9 @@ def encoding_loop(win, stimImages, groupOne, redTarget, subjectNum, base_dir):
         #attach results of experiment to dataset
         detectionData.append(
             [
+                subjectNum,
+                (not groupOne)+1,
+                len(detectionData)+1,
                 stim,
                 target,
                 stimPresentation,
@@ -199,7 +213,7 @@ def main():
     else:
         groupOne = False
     oldImages = get_images("./Stimuli/Old_Images", groupOne)
-    
+    create_scramble(oldImages, "./Stimuli/Old_Images/", "./Stimuli/Scrambled_Old_Images/")
     metaData = []
     for (stim, target) in oldImages:
         metaData.append(
@@ -214,7 +228,7 @@ def main():
         redTarget = True
     else:
         redTarget = False
-    encoding_loop(win, oldImages, groupOne, redTarget, subjectNum, "./Stimuli/Old_Images/")
+    encoding_loop(win, oldImages, groupOne, redTarget, subjectNum, "./Stimuli/Old_Images/", "./Stimuli/Scrambled_Old_Images/")
     #insert shuffling code here
 
 # Below two lines of python actually run the main function
