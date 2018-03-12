@@ -1,72 +1,36 @@
+from experiment import Experiment
 from psychopy import visual, core, event, gui, event
 import glob, os
 import numpy as np
 import random
-import pprint
 import image_slicer
 
 #global variables presented here
 colorRed = [1, -1, -1] 
 colorGrn = [-1, 1, -1]
 
-# get_keypress() - Takes no arguments and returns any possible keypresses. 
-# If no keypress is detected, returns None
-def get_keypress():
-    keys = event.getKeys()
-    if keys:
-        return keys[0]
-    else:
-        return None
-
-# user_input() - Takes no argument and it displays a user input dialog
-# requesting for subject number
-# Requires: User input must be an int
-def user_input():
-    dlg = gui.Dlg()
-    dlg.addField("Subject Num:")
-    
-    dlg.show()
-    try:
-        return int(dlg.data[0])
-    except ValueError:
-        print "ERROR: No input entered for subject number"
-        core.quit()
-
-# shutdown(win) - Takes the current active window as an argument and 
-# closes the window and cleanly exits the current script. Doesn't return
-# a value
-def shutdown(win):
-    win.close()
-    core.quit()
-
-# init_window() - Takes no arguments and initializes the main active
-# window to use for the experiment
-def init_window():
-    wd = visual.Window(
-        size=[1400, 800],
-        units="pix",
-        fullscr=True 
-    )
-    return wd
-
-# get_images(dir) - Takes a string argument for directory and a boolean argument 
-# for group number and returns a shuffled tuple list for all the JPEG images within
-# that directory where the first element of the tuple is the file name and the 
-# second element is a boolean value indicating whether this image is a target or
-# not.
-# Requires: [dir] must be a valid directory
-def get_images(dir, groupOne):
+def get_images(dir, group):
+    '''
+    get_images(dir, group) - finds the images required for the experiment and 
+    classifies each image as a target or not
+        Inputs: [dir] is a string representation of the directory to look at to 
+        find the images. [group] is an integer representing the group number.
+        Returns: A shuffled 2-D list where the first element in the inner list 
+        is the name of the image and the second is whether the image is a target
+        or not.
+        Requires: [dir] must be a valid directory
+    '''
     os.chdir(dir)
     
     whiteImages = []
-    for file in glob.glob("w*.jpg"):
+    for file in glob.glob('w*.jpg'):
         whiteImages.append(file)
         
     blackImages = []
-    for file in glob.glob("b*.jpg"):
+    for file in glob.glob('b*.jpg'):
         blackImages.append(file)
         
-    if groupOne:
+    if group == 1:
         #targets to appear on 70% of black faces and 30% of white
         targetBlackImages = random.sample(blackImages, 28)
         targetWhiteImages = random.sample(whiteImages, 12)
@@ -79,21 +43,26 @@ def get_images(dir, groupOne):
     imgList = []
     for face in allImages:
         if face in targetBlackImages or face in targetWhiteImages:
-            imgList.append((face, True))# target image so we set True
+            imgList.append([face, True])  # target image so we set True
         else:
-            imgList.append((face, False))
+            imgList.append([face, False])
     
     random.shuffle(imgList)
-    os.chdir("../..")
+    os.chdir('../..')
     return imgList
 
-# create_scramble(images, dir) - Takes a tuple list of images and a directory 
-# to find the images. Function saves a scrambled version of the image to the 
-# saveDir. The scrambling process involves splitting the image into 16x16 tiles
-# for a 256px image and shuffling the positions
-def create_scramble(images, dir, saveDir):
-    for (stim, target) in images:
-        tiles = image_slicer.slice(dir+stim, 256, save=False)
+def create_scramble(images, dir, save_dir):
+    '''
+    create_scramble(images, dir, save_dir) - Creates a list of scrambled images
+    where we split each 256px image into 16x16 tiles and randomly shuffling
+        Inputs: [images] is a 2-D array where the first element in the inner 
+        list is the image name. [dir] is a string representing the base 
+        directory of the images to be read. sav_dir is a string representing the
+        base directory of the scrambled images to be saved.
+        Requires: both [dir] and [sae_dir] must be valid directories
+    '''
+    for image in images:
+        tiles = image_slicer.slice(dir+image[0], 256, save=False)
         tiles_list = list(tiles)
         random.shuffle(tiles_list)
         count = 0
@@ -101,38 +70,16 @@ def create_scramble(images, dir, saveDir):
             tile.image = tiles_list[count].image
             count += 1
         scramble = image_slicer.join(tiles)
-        scramble.save(saveDir+stim)
+        scramble.save(save_dir+image[0])
 
-# meta_data_write(win, data, subjectNum, groupOne, meta) - Takes the window,
-# array of all data, subject number, and group number as arguments
-# This function writes the data to a file named to identify the group
-# number and the subject number as well as whether or not this is meta data or 
-# stimulus data from the experiment
-def data_write(win, data, subjectNum, groupOne, meta):
-    if meta:
-        data_path = ("./Data/P"+str(subjectNum)+"_ABE_Racial_Bias_Exp_Meta_Group"+
-            str((not groupOne)+1)+".txt")# labels the file
-    else:
-        data_path = ("./Data/P"+str(subjectNum)+"_ABE_Racial_Bias_Exp_Data_Group"+
-        str((not groupOne)+1)+".txt")
-    if not os.path.exists(data_path):
-        file = open(data_path, "w")
-        textString = ""
-        for line in data:
-            lineString = ""
-            for element in line:
-                lineString += str(element)+'\t'
-            file.write(lineString+'\n')
-        file.close()
-    else:
-        print "ERROR: Filename "+data_path+" already exists"
-        shutdown(win)
 
-# gen_square(win, color) - Takes a window argument and a color
-# to create a 10x10 px visual square of the color provided
-# Requires: [color] must be a three value list representing color
-# as documented in the psychopy library
 def gen_square(win, color):
+    '''
+    gen_square(win, color) - generates a psychopy visual 10x10 square of the 
+    specified color 
+        Inputs: [win] is the active window. [color] is an RGB list.
+        Returns: A psychopy visual stim rectangle
+    '''
     return visual.Rect(
         win=win,
         units="pix",
@@ -141,96 +88,99 @@ def gen_square(win, color):
         fillColor=color,
         lineColor=color)
 
-# encoding_loop(win, stimImages) - Takes a window argument and a list of 
-# images to use as stimuli. It also takes two boolean values representing the
-# group number and the target stimulus to use. Lastly, takes in a string
-# representing the base directory for the images. This function essentially runs 
-# the encoding and detection tasks of the experiment. 
-def encoding_loop(win, stimImages, groupOne, redTarget, subjectNum, stim_dir, scramble_dir):
-    redSq = gen_square(win, colorRed) #generates a red square
-    greenSq = gen_square(win, colorGrn) #generates a green square
+def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
+    '''
+    encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir) - Runs 
+    the encoding and detection task loops and saves the data
+        Inputs: [exp] is an Experiment class. [stim_images] is a 2-D array with
+        the first element in each inner list being the image name and the 
+        second element indicating whether or not it is a target. [red_target] is
+        a boolean value indicating whether or not red is the target color. 
+        [stim_dir] is the base directory for the stim images. [scramble_dir] is
+        the base directory for the scrambled images.
+        Requires: [stim_dir] and [scramble_dir] are valid directories and every
+        element in stim_images must be a two element lists.
+    '''
+    redSq = gen_square(exp.win, colorRed) #generates a red square
+    greenSq = gen_square(exp.win, colorGrn) #generates a green square
     
-    detectionData = []
+    detection_data = []
     clock = core.Clock()
-    #Below loop runs through each image in the stimImages argument and runs the procedure on it
-    for (stim, target) in stimImages:
-        img = visual.ImageStim(win=win, image=stim_dir+stim, units="pix") #Image presented as a Stim
-        scramble = visual.ImageStim(win=win, image=scramble_dir+stim, units="pix")
-        reactionTimes = [] #times when user reacted to the stim
+    #loop runs through each image in stim_images argument and runs procedure
+    for stim in stim_images:
+        #creates image and scramble for procedure
+        img = visual.ImageStim(win=exp.win, image=stim_dir+stim[0], units='pix')
+        scramble = visual.ImageStim(win=exp.win, image=scramble_dir+stim[0], 
+            units='pix')
+
+        reaction_times = [] #times when user reacted to the stim
         
         img.draw()
-        win.flip() #we want to immediately present the stim and note down the presentation time
+        exp.win.flip() #immediately presents stim and records time
         
-        stimPresentation = clock.getTime()
-        stimExit = 0.0
-        stimTimer = core.Clock()
-        while stimTimer.getTime() <= 1.0:
-            key = get_keypress()
+        stim_presentation = clock.getTime()
+        stim_exit = 0.0
+        stim_timer = core.Clock()
+        while stim_timer.getTime() <= 1.0:
+            key = exp.get_keypress()
             if key =='escape':
-                data_write(win, detectionData, subjectNum, groupOne, False) #writes data before quitting
-                shutdown(win) #sets up 'Esc' as a character to quit program
+                exp.data_write(detection_data, './Data/', True)
+                exp.shutdown()
             elif key == 'space':
-                reactionTimes.append(clock.getTime())
+                reaction_times.append(clock.getTime())
             
-            if 0.0 <= stimTimer.getTime() < .050:
+            if 0.0 <= stim_timer.getTime() < .050:
                 img.draw()
-                win.flip()
-            elif 0.050 <= stimTimer.getTime() < 0.150:
+                exp.win.flip()
+            elif 0.050 <= stim_timer.getTime() < 0.150:
                 img.draw()
-                if (target and redTarget) or (not target and not redTarget):
+                if (stim[1] and red_target) or (not stim[1] and not red_target):
                     redSq.draw()
                 else:
                     greenSq.draw()
-                win.flip() #target/distractor presented for 100ms
-            elif 0.150 <= stimTimer.getTime() < 0.2:
+                exp.win.flip() #target/distractor presented for 100ms
+            elif 0.150 <= stim_timer.getTime() < 0.2:
                 img.draw()
-                win.flip()
-                stimExit = clock.getTime()
+                exp.win.flip()
+                stim_exit = clock.getTime()
             else:
                 scramble.draw() #scrambled image presented for remaining 800ms
-                win.flip()
+                exp.win.flip()
         #attach results of experiment to dataset
-        detectionData.append(
+        detection_data.append(
             [
-                subjectNum,
-                (not groupOne)+1,
-                len(detectionData)+1,
-                stim,
-                target,
-                stimPresentation,
-                stimExit
+                exp.subject_data['subject_num'],
+                exp.subject_data['group'],
+                len(detection_data)+1,
+                stim[0],
+                stim[1],
+                stim_presentation,
+                stim_exit
             ])
-        detectionData[len(detectionData)-1].extend(reactionTimes)
-    data_write(win, detectionData, subjectNum, groupOne, False)
+        detection_data[len(detection_data)-1].extend(reaction_times)
+    exp.data_write(detection_data, './Data/', True)
 
-# main() - Takes no arguments and runs the main program
 def main():
-    subjectNum = user_input()
-    win = init_window()
-    
-    if subjectNum % 4 <= 1:
-        groupOne = True
+    exp = Experiment([1400, 800], True, {}, 'ABE_Racial_Bias')
+    if exp.subject_data['subject_num'] % 4 <= 1:
+        exp.subject_data['group'] = 1
     else:
-        groupOne = False
-    oldImages = get_images("./Stimuli/Old_Images", groupOne)
-    create_scramble(oldImages, "./Stimuli/Old_Images/", "./Stimuli/Scrambled_Old_Images/")
-    metaData = []
-    for (stim, target) in oldImages:
-        metaData.append(
-            [
-                stim,
-                target
-            ]
-        )
-    data_write(win, metaData, subjectNum, groupOne, True)
+        exp.subject_data['group'] = 2
+
+    old_images = get_images('./Stimuli/Old_Images', exp.subject_data['group'])
+
+    create_scramble(old_images, './Stimuli/Old_Images/', 
+        './Stimuli/Scrambled_Old_Images/')
+
+    exp.data_write(old_images, './Data/', False)
     
-    if subjectNum % 2 == 1:
-        redTarget = True
+    if exp.subject_data['subject_num'] % 2 == 1:
+        red_target = True
     else:
-        redTarget = False
-    encoding_loop(win, oldImages, groupOne, redTarget, subjectNum, "./Stimuli/Old_Images/", "./Stimuli/Scrambled_Old_Images/")
+        red_target = False
+    encoding_loop(exp, old_images, red_target, './Stimuli/Old_Images/', 
+        './Stimuli/Scrambled_Old_Images/')
     #insert shuffling code here
 
-# Below two lines of python actually run the main function
 if __name__ == "__main__":
     main()
