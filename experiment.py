@@ -56,25 +56,20 @@ class Experiment:
 		else:
 			return None
 
-	def data_write(self, data, dir, exp_data):
+	def data_write(self, data, dir):
 		'''
 		data_write(data, dir, exp_data) - writes a tab delimited txt file to 
 		a unique file name based on the subject data provided
 			Inputs: [data] is a 2-D array where each element in the outer list 
 			is a data entry with multiple data values. [dir] is a string 
 			representation of a file directory to save the data in. 
-			[exp_data] is a boolean value indicating whether we are recording
-			data for the experiment or metadata for the experiment.
 			Requires: [dir] must be a valid directory
 		'''
 		subject_info = ''
 		for k, v in self.subject_data.items():
 			subject_info += k + '_' + str(v)+'_'
 
-		if exp_data:
-			data_path = dir + subject_info + 'Data.txt'
-		else:
-			data_path = dir + subject_info + 'Meta.txt'
+		data_path = dir + subject_info + 'Data.txt'
 
 		if not os.path.exists(data_path):
 			file = open(data_path, 'w')
