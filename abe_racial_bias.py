@@ -120,9 +120,9 @@ def gen_square(win, color):
     '''
     return visual.Rect(
         win=win,
-        units="pix",
-        width=10,
-        height=10,
+        units="deg",
+        width=.5,
+        height=.5,
         fillColor=color,
         lineColor=color)
 
@@ -130,15 +130,25 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
     '''
     encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir) - Runs 
     the encoding and detection task loops and saves the data
-        Inputs: [exp] is an Experiment class. [stim_images] is a 2-D array with
-        the first element in each inner list being the image name and the 
-        second element indicating whether or not it is a target. [red_target] is
-        a boolean value indicating whether or not red is the target color. 
-        [stim_dir] is the base directory for the stim images. [scramble_dir] is
-        the base directory for the scrambled images.
+        Inputs: [exp] is an Experiment class. [stim_images] is a pandas
+        dataframe with columns indicating image name, target, and race of 
+        individual's face. [red_target] is a boolean value indicating whether or 
+        not red is the target color. [stim_dir] is the base directory for the 
+        stim images. [scramble_dir] is the base directory for the scrambled 
+        images.
         Requires: [stim_dir] and [scramble_dir] are valid directories and every
-        element in stim_images must be a two element lists.
+        row in [stim_images] must contain non-NAN values.
     '''
+    
+    exp.text_box.text = "Recognition and Encoding Tasks:\
+        \nYou will see a series of images in the following task.\
+        \nPress the spacebar whenever you see a " + ("red" if red_target
+        else "green") + " square.\
+        \nPress the spacebar to continue."
+
+    exp.win.flip()
+    event.waitKeys(keyList = ["space"])
+    
     redSq = gen_square(exp.win, colorRed) #generates a red square
     greenSq = gen_square(exp.win, colorGrn) #generates a green square
     
@@ -150,9 +160,9 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
         for index, row in shuffled_images.iterrows():
             #creates image and scramble for procedure
             img = visual.ImageStim(win=exp.win, image=stim_dir+row['img'],
-                units='pix')
+                units='deg')
             scramble = visual.ImageStim(win=exp.win,
-                image=scramble_dir+row['img'], units='pix')
+                image=scramble_dir+row['img'], units='deg')
 
             reaction_times = [] #times when user reacted to the stim
 
@@ -165,7 +175,7 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
             while stim_timer.getTime() <= 1.0:
                 key = exp.get_keypress()
                 if key == 'escape':
-                    exp.data_write(detection_data, './Data/')
+                    exp.data_write(detection_data, './Data/', 'Encoding')
                     exp.shutdown()
                 elif key == 'space':
                     reaction_times.append(clock.getTime())
@@ -203,10 +213,94 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
                     stim_exit
                 ])
             detection_data[len(detection_data)-1].extend(reaction_times)
-    exp.data_write(detection_data, './Data/')
+    exp.data_write(detection_data, './Data/', 'Encoding')
 
-def main():
-    exp = Experiment([1400, 800], True, {}, 'ABE_Racial_Bias')
+
+def memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir):
+    '''
+    memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir) - Runes
+    the recognition memory task loop and saves the data
+        Inputs: [exp] is the Experiment class. [old_imgs] is a 2-D pandas 
+        dataframe with columns indicating the image name, target, and race of 
+        individuals face. This dataframe represents all old images presented
+        during the encoding tasks. [new_imgs] is a similar dataframe with new
+        images instead of old. [old_imgs_dir] is a string representing the 
+        directory that the old images were taken from. [new_imgs_dir] is a
+        string representing the directory that the new images were taken from.
+        Requires: [old_imgs_dir] and [new_imgs_dir] are valid directories and
+        every row in [old_imgs] and [new_imgs] must contain non-NAN values.
+    '''
+    
+    exp.text_box.text = "Recognition Memory Tasks:\
+        \nYou will see a series of images in the following task.\
+        \nPress left arrow if you think it was presented previously \
+        \nand press the right arrow if you think it is a new image.\
+        \nFor each image also rate your confidence by pressing \
+        \na number key from 1-7. Press spacebar to continue."
+    exp.text_box.draw()
+    exp.win.flip()
+    event.waitKeys(keyList = ["space"])
+    
+    image_sequence = []
+    #accumulate all images and their directories into tuples where first 
+    #element is image name and second element is whether it is a new image or 
+    #not
+    for index, row in old_imgs.iterrows():
+        image_sequence.append((row['img'], 1))
+      
+    for index, row in new_imgs.iterrows():
+        image_sequence.append((row['img'], 0))
+
+    random.shuffle(image_sequence)
+
+    memory_data = []
+
+    clock = core.Clock()
+
+    for img in image_sequence:
+        img_stim = visual.ImageStim(win=exp.win, 
+            image= (old_imgs_dir if img[1] else new_imgs_dir)+ img[0],
+             units='deg')
+        exp.text_box.text = "Old image or new image?"
+        img_stim.draw()
+        exp.text_box.draw()
+        exp.win.flip()
+        img_present_time = clock.getTime()
+
+        img_keys = event.waitKeys(keyList = ['left', 'right', 'escape'], 
+            timeStamped=clock)
+   
+        if img_keys[0][0] == 'escape':
+            exp.shutdown()
+
+        exp.text_box.text = "Confidence Level:\
+                    \n1\t2\t3\t4\t5\t6\t7"
+        exp.text_box.draw()
+        exp.win.flip()
+        confidence_present_time = clock.getTime()
+        
+        confidence_keys = event.waitKeys(
+            keyList = ['1','2','3','4','5','6','7'], timeStamped=clock)
+
+        memory_data.append(
+            [
+                img[0],
+                img[1],
+                img_present_time,
+                img_keys[0][0] == 'left',
+                img_keys[0][1],
+                confidence_present_time,
+                int(confidence_keys[0][0]),
+                confidence_keys[0][1]
+            ])
+    exp.data_write(memory_data, './Data/', 'Memory')
+
+
+if __name__ == "__main__":
+    exp = Experiment([1400, 800], True, {}, 'ABE_Racial_Bias', 'testMonitor')
+    
+    exp.win.flip()
+    
     if exp.subject_data['subject_num'] % 4 <= 1:
         exp.subject_data['group'] = 1
     else:
@@ -222,8 +316,9 @@ def main():
     else:
         red_target = False
 
-    encoding_loop(exp, old_images, red_target, './Stimuli/Old_Images/', 
-        './Stimuli/Scrambled_Old_Images/')
-
-if __name__ == "__main__":
-    main()
+    #encoding_loop(exp, old_images, red_target, './Stimuli/Old_Images/', 
+    #    './Stimuli/Scrambled_Old_Images/')
+    
+    new_images = get_images('./Stimuli/New_Images', exp.subject_data['group'])
+    memory_loop(exp, old_images, new_images, 
+        './Stimuli/Old_Images/', './Stimuli/New_Images/')

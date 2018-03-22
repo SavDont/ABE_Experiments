@@ -1,17 +1,22 @@
-from psychopy import visual, core, event, gui
+from psychopy import visual, core, event, gui, monitors
 import os
 class Experiment:
 	'''
 	This is a class representing a psychology experiment
 	'''
-	def __init__(self, win_size, win_fullscr, input_fields, exp_name):
+	def __init__(self, win_size, win_fullscr, input_fields, exp_name, mon):
 		input_fields.update({'subject_num' : int})
 		self.subject_data = self.user_input(input_fields)
 		self.win = visual.Window(
 				size = win_size,
-				units = 'px',
-				fullscr = win_fullscr)
+				units = 'deg',
+				fullscr = win_fullscr,
+                monitor = monitors.Monitor(mon))
+		self.text_box = visual.TextStim(self.win, text="Loading Stimuli...", 
+            color="Black", pos=(0, 12), height=.75, font="Monaco",
+                                        units='deg', wrapWidth=50)
 		self.exp_name = exp_name
+		self.text_box.draw()
 
 	def user_input(self, fields):
 		'''
@@ -56,20 +61,22 @@ class Experiment:
 		else:
 			return None
 
-	def data_write(self, data, dir):
+	def data_write(self, data, dir, data_type):
 		'''
 		data_write(data, dir, exp_data) - writes a tab delimited txt file to 
 		a unique file name based on the subject data provided
 			Inputs: [data] is a 2-D array where each element in the outer list 
 			is a data entry with multiple data values. [dir] is a string 
-			representation of a file directory to save the data in. 
+			representation of a file directory to save the data in. [data_type]
+			is a string suffix to file names that indicates the type of data
+			that is being saved.
 			Requires: [dir] must be a valid directory
 		'''
 		subject_info = ''
 		for k, v in self.subject_data.items():
 			subject_info += k + '_' + str(v)+'_'
 
-		data_path = dir + subject_info + 'Data.txt'
+		data_path = dir + subject_info + data_type + '.txt'
 
 		if not os.path.exists(data_path):
 			file = open(data_path, 'w')
