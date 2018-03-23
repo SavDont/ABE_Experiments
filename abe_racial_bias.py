@@ -146,6 +146,7 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
         else "green") + " square.\
         \nPress the spacebar to continue."
 
+    exp.text_box.draw()
     exp.win.flip()
     event.waitKeys(keyList = ["space"])
     
@@ -153,10 +154,22 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
     greenSq = gen_square(exp.win, colorGrn) #generates a green square
     
     detection_data = []
+
+    exp.text_box.text = "Block 1 will start now.\
+            \nPress the spacebar to continue."
+    exp.text_box.draw()
+    exp.win.flip()
+    event.waitKeys(keyList = ["space"])
+
     clock = core.Clock()
     for i in range(10):
+
         shuffled_images = shuffle_images(stim_images)
         #loop runs through each image in shuffled_images argument for procedure
+        targets_responded = 0
+        non_targets_responded = 0
+        #response_times used to calculate median response time
+        response_times = []
         for index, row in shuffled_images.iterrows():
             #creates image and scramble for procedure
             img = visual.ImageStim(win=exp.win, image=stim_dir+row['img'],
@@ -171,6 +184,8 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
 
             stim_presentation = clock.getTime()
             stim_exit = 0.0
+            space_pressed = False
+
             stim_timer = core.Clock()
             while stim_timer.getTime() <= 1.0:
                 key = exp.get_keypress()
@@ -179,6 +194,17 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
                     exp.shutdown()
                 elif key == 'space':
                     reaction_times.append(clock.getTime())
+                    #Check to make sure this is the first time  the spacebar
+                    #has been pressed and depending on whether the image
+                    #is a target or not, add up the appropriate statistic
+                    if (not space_pressed) and row['t']:
+                        space_pressed = True
+                        targets_responded += 1
+                        response_times.append(stim_timer.getTime())
+                    elif (not space_pressed) and not row['t']:
+                        space_pressed = True
+                        non_targets_responded += 1
+                        response_times.append(stim_timer.getTime())
 
                 if 0.0 <= stim_timer.getTime() < 0.050:
                     img.draw()
@@ -213,6 +239,20 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
                     stim_exit
                 ])
             detection_data[len(detection_data)-1].extend(reaction_times)
+
+        median_response = np.median([i for i in response_times if i >= 0.050])
+        exp.text_box.text = "Block %i complete. Here are your results:\
+            \nPercentage of targets you responded to: %.2f %%\
+            \nNumber of times you responded to non-targets: %i\
+            \nMedian response time: %.4f s\
+            \nBlock %i will start now.\
+            \nPress the spacebar to continue." % (i+1, 
+                (float(targets_responded)/40.0)*100.0, non_targets_responded,
+                median_response, i+2)
+        exp.text_box.draw()
+        exp.win.flip()
+        event.waitKeys(keyList = ["space"])
+
     exp.data_write(detection_data, './Data/', 'Encoding')
 
 
@@ -233,8 +273,8 @@ def memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir):
     
     exp.text_box.text = "Recognition Memory Tasks:\
         \nYou will see a series of images in the following task.\
-        \nPress left arrow if you think it was presented previously \
-        \nand press the right arrow if you think it is a new image.\
+        \nPress \'z\' key if you think it was presented previously \
+        \nand press the \'x\' key if you think it is a new image.\
         \nFor each image also rate your confidence by pressing \
         \na number key from 1-7. Press spacebar to continue."
     exp.text_box.draw()
@@ -257,7 +297,7 @@ def memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir):
 
     clock = core.Clock()
 
-    for img in image_sequence:
+    for (index, img) in enumerate(image_sequence, 1):
         img_stim = visual.ImageStim(win=exp.win, 
             image= (old_imgs_dir if img[1] else new_imgs_dir)+ img[0],
              units='deg')
@@ -267,7 +307,7 @@ def memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir):
         exp.win.flip()
         img_present_time = clock.getTime()
 
-        img_keys = event.waitKeys(keyList = ['left', 'right', 'escape'], 
+        img_keys = event.waitKeys(keyList = ['z', 'x', 'escape'], 
             timeStamped=clock)
    
         if img_keys[0][0] == 'escape':
@@ -281,18 +321,36 @@ def memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir):
         
         confidence_keys = event.waitKeys(
             keyList = ['1','2','3','4','5','6','7'], timeStamped=clock)
+        
+        exp.text_box.text = "+" if ((img_keys[0][0] == 'z') == img[1]) else "-"
+        exp.text_box.color = "Green" if ((img_keys[0][0] == 'z') == img[1]) else "Red"
+        exp.text_box.height = 3.0
+        exp.text_box.draw()
+        exp.win.flip()
 
+        
+        core.wait(0.3)
+        exp.text_box.color = "Black"
+        exp.text_box.height = 0.75
+        
         memory_data.append(
             [
                 img[0],
                 img[1],
                 img_present_time,
-                img_keys[0][0] == 'left',
+                img_keys[0][0] == 'z', #should be 1 if user chose old image
                 img_keys[0][1],
                 confidence_present_time,
                 int(confidence_keys[0][0]),
                 confidence_keys[0][1]
             ])
+        if index % 20 == 0:
+            exp.text_box.text = "%i / %i images complete.\
+                \nPress spacebar to continue." % (index, len(image_sequence))
+            exp.text_box.draw()
+            exp.win.flip()
+            event.waitKeys(keyList = ["space"])
+            
     exp.data_write(memory_data, './Data/', 'Memory')
 
 
