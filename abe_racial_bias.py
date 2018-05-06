@@ -241,14 +241,23 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
             detection_data[len(detection_data)-1].extend(reaction_times)
 
         median_response = np.median([i for i in response_times if i >= 0.050])
-        exp.text_box.text = "Block %i complete. Here are your results:\
-            \nPercentage of targets you responded to: %.2f %%\
-            \nNumber of times you responded to non-targets: %i\
-            \nMedian response time: %.4f s\
-            \nBlock %i will start now.\
-            \nPress the spacebar to continue." % (i+1, 
-                (float(targets_responded)/40.0)*100.0, non_targets_responded,
-                median_response, i+2)
+        if (i+1) < 10:
+            exp.text_box.text = "Block %i complete. Here are your results:\
+                \nPercentage of targets you responded to: %.2f %%\
+                \nNumber of times you responded to non-targets: %i\
+                \nMedian response time: %.4f s\
+                \nBlock %i will start now.\
+                \nPress the spacebar to continue." % (i+1, 
+                    (float(targets_responded)/40.0)*100.0, non_targets_responded,
+                    median_response, i+2)
+        else:
+            exp.text_box.text = "Block %i complete. Here are your results:\
+                \nPercentage of targets you responded to: %.2f %%\
+                \nNumber of times you responded to non-targets: %i\
+                \nMedian response time: %.4f s\
+                \nPress the spacebar to continue." % (i+1, 
+                    (float(targets_responded)/40.0)*100.0, non_targets_responded,
+                    median_response)
         exp.text_box.draw()
         exp.win.flip()
         event.waitKeys(keyList = ["space"])
@@ -335,6 +344,9 @@ def memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir):
         
         memory_data.append(
             [
+                exp.subject_data['subject_num'],
+                exp.subject_data['group'],
+                len(memory_data)+1,
                 img[0],
                 img[1],
                 img_present_time,
