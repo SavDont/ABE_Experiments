@@ -392,3 +392,8 @@ if __name__ == "__main__":
     new_images = get_images('./Stimuli/New_Images', exp.subject_data['group'])
     memory_loop(exp, old_images, new_images, 
         './Stimuli/Old_Images/', './Stimuli/New_Images/')
+    exp.text_box.text = "Thank you for participating in this experiment.\
+    \nYour response has been recorded"
+    exp.text_box.draw()
+    event.waitKeys(keyList=["space"])
+    exp.win.flip()
