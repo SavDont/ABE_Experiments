@@ -13,36 +13,31 @@ colorGrn = [-1, 1, -1]
 
 def shuffle_images(df):
     '''
-    shuffle_images(df) - shuffles the images separately and joins them back 
-    together in the original order
+    shuffle_images(df) - shuffles the images so that there aren't more than four
+    targets or distractors in a row.
         Inputs: [df] is a python dataframe where the first columns is the image
         name, second column indicates whether image is a target, and last column
         indicates whether the image is black or not
-        Returns: A shuffled dataframe in the original order of target/distractor
+        Returns: A shuffled dataframe in the originadfl order of target/distractor
         and black/white conditions. However, the order of each subset of 
         conditions is different
     '''
-    t_b = df[(df.t == 1) & (df.b == 1)]
-    t_w = df[(df.t == 1) & (df.b == 0)]
-    d_b = df[(df.t == 0) & (df.b == 1)]
-    d_w = df[(df.t == 0) & (df.b == 0)]
-
-    t_b = t_b.sample(frac=1).reset_index(drop=True)
-    t_w = t_w.sample(frac=1).reset_index(drop=True)
-    d_b = d_b.sample(frac=1).reset_index(drop=True)
-    d_w = d_w.sample(frac=1).reset_index(drop=True)
-
-    df.loc[(df.t == 1) & (df.b == 1), 'img'] = t_b['img'].values
-    df.loc[(df.t == 1) & (df.b == 0), 'img'] = t_w['img'].values
-    df.loc[(df.t == 0) & (df.b == 1), 'img'] = d_b['img'].values
-    df.loc[(df.t == 0) & (df.b == 0), 'img'] = d_w['img'].values
+    
+    shuffle = True
+    
+    while shuffle:
+        df = df.sample(frac=1).reset_index(drop=True)
+        shuffle = False
+        for i in range(len(df)-4):
+            if df['t'][i] == df['t'][i+1] == df['t'][i+2] == df['t'][i+3] == df['t'][i+4]:
+                shuffle = True
 
     return df
 
 def get_images(dir, group):
     '''
     get_images(dir, group) - finds the images required for the experiment and 
-    classifies each image as a target or not
+    classifies each image as a target or not  jjljlhljlj
         Inputs: [dir] is a string representation of the directory to look at to 
         find the images. [group] is an integer representing the group number.
         Returns: A shuffled pandas DataFrame where the first column indicates
@@ -66,12 +61,12 @@ def get_images(dir, group):
         
     if group == 1:
         #targets to appear on 70% of black faces and 30% of white
-        targetBlackImages = random.sample(blackImages, 28)
-        targetWhiteImages = random.sample(whiteImages, 12)
+        targetBlackImages = random.sample(blackImages, int(.7*len(blackImages))))
+        targetWhiteImages = random.sample(whiteImages, int(.3*len(whiteImages))))
     else:
         #targets to appear on 30% of black faces and 70% of white
-        targetBlackImages = random.sample(blackImages, 12)
-        targetWhiteImages = random.sample(whiteImages, 28)
+        targetBlackImages = random.sample(blackImages, int(.3*len(blackImages))))
+        targetWhiteImages = random.sample(whiteImages, int(.7*len(whiteImages))))
 
     for face in blackImages:
         if face in targetBlackImages:
@@ -193,7 +188,7 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
                     exp.data_write(detection_data, './Data/', 'Encoding')
                     exp.shutdown()
                 elif key == 'space':
-                    reaction_times.append(clock.getTime())
+                    reaction_times.append(stim_timer.getTime())
                     #Check to make sure this is the first time  the spacebar
                     #has been pressed and depending on whether the image
                     #is a target or not, add up the appropriate statistic
@@ -239,7 +234,8 @@ def encoding_loop(exp, stim_images, red_target, stim_dir, scramble_dir):
                     stim_exit
                 ])
             detection_data[len(detection_data)-1].extend(reaction_times)
-
+            exp.data_write(detection_data, './Data/', 'Encoding')
+            
         median_response = np.median([i for i in response_times if i >= 0.050])
         if (i+1) < 10:
             exp.text_box.text = "Block %i complete. Here are your results:\
@@ -363,11 +359,13 @@ def memory_loop(exp, old_imgs, new_imgs, old_imgs_dir, new_imgs_dir):
             exp.win.flip()
             event.waitKeys(keyList = ["space"])
             
+        exp.data_write(memory_data, './Data/', 'Memory')
     exp.data_write(memory_data, './Data/', 'Memory')
 
 
+
 if __name__ == "__main__":
-    exp = Experiment([1400, 800], True, {}, 'ABE_Racial_Bias', 'testMonitor')
+    exp = Experiment([1400, 800], False, {}, 'ABE_Racial_Bias', 'testMonitor')
     
     exp.win.flip()
     
@@ -386,8 +384,8 @@ if __name__ == "__main__":
     else:
         red_target = False
 
-    #encoding_loop(exp, old_images, red_target, './Stimuli/Old_Images/', 
-    #    './Stimuli/Scrambled_Old_Images/')
+    encoding_loop(exp, old_images, red_target, './Stimuli/Old_Images/', 
+        './Stimuli/Scrambled_Old_Images/')
     
     new_images = get_images('./Stimuli/New_Images', exp.subject_data['group'])
     memory_loop(exp, old_images, new_images, 

@@ -78,14 +78,10 @@ class Experiment:
 
 		data_path = dir + subject_info + data_type + '.txt'
 
-		if not os.path.exists(data_path):
-			file = open(data_path, 'w')
-			for line in data:
-				line_str = ''
-				for element in line:
-					line_str += str(element) + '\t'
-				file.write(line_str + '\n')
-			file.close()
-		else:
-			print "ERROR: Filename " + data_path + " already exists"
-			self.shutdown()
+		file = open(data_path, 'w')
+		for line in data:
+			line_str = ''
+			for element in line:
+				line_str += str(element) + '\t'
+			file.write(line_str + '\n')
+		file.close()
