@@ -33,6 +33,6 @@
     - `delete from ipaddr;`
     - `delete from finishedexp;`
 2. The subject ids are read from a mysql table and are sampled without replacement. Every so often you need to add more subject ids to the table or else the experiment will say that no more participants are being accepted. Run the following command to add more subject ids.
-    -`insert into subjectsavail (subject) values (5), (8), (9);`
+    - `insert into subjectsavail (subject) values (5), (8), (9);`
     
 5, 8, and 9 can be replaced with any other subject ids and you can add more than three at a time.
