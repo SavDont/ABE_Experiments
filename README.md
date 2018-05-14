@@ -11,27 +11,28 @@
 
 1. Before you run [experiment.html](experiment.html), make sure you have XAMPP which you can download from [here](https://www.apachefriends.org/download.html).
 2. Once you have XAMPP installed, transfer the following items to the htdocs folder located in the XAMPP installation folder:
-    -jsdataframe folder
-    -jspsych folder
-    -Stimuli folder
-    -experiment.html
-    -insert_ip.php
-    -write_data.php
-    -get_subject_id.php
-    -finished_exp.php
+    - jsdataframe folder
+    - jspsych folder
+    - Stimuli folder
+    - experiment.html
+    - insert_ip.php
+    - write_data.php
+    - get_subject_id.php
+    - finished_exp.php
 3. Now you need to create the MySQL tables necessary for base functionality. Open up XAMPP and click on shell.
 4. In the shell run the command `mysql -u root -p` and press enter when prompted for password
 5. Run the following commands in the shell:
-    -`create table IPAddr (participant INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, ips varchar(45)  NOT NULL);`
-    -`create table subjectsAvail(subjectid INT(5) UNSIGNED);`
-    -`create table finishedExp (subjectid INT(5) UNSIGNED, participant INT(6) UNSIGNED,FOREIGN KEY (participant) REFERENCES IPADDR(participant));`
-    -`ALTER TABLE subjectsavail ADD UNIQUE(subjectid);`
+    - `create table IPAddr (participant INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, ips varchar(45)  NOT NULL);`
+    - `create table subjectsAvail(subjectid INT(5) UNSIGNED);`
+    - `create table finishedExp (subjectid INT(5) UNSIGNED, participant INT(6) UNSIGNED,FOREIGN KEY (participant) REFERENCES IPADDR(participant));`
+    - `ALTER TABLE subjectsavail ADD UNIQUE(subjectid);`
 6. You should be all set to open [experiment.html](experiment.html) in a new browser window
 
 ### Notes:
 1. You can only run the experiment.html once before it records your ip address and prevents you from running it again. To run the experiment again you need to run the following commands in mysql shell:
-    -`delete from ipaddr;`
-    -`delete from finishedexp;`
+    - `delete from ipaddr;`
+    - `delete from finishedexp;`
 2. The subject ids are read from a mysql table and are sampled without replacement. Every so often you need to add more subject ids to the table or else the experiment will say that no more participants are being accepted. Run the following command to add more subject ids.
     -`insert into subjectsavail (subject) values (5), (8), (9);`
+    
 5, 8, and 9 can be replaced with any other subject ids and you can add more than three at a time.
