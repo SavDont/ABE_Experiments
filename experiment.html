@@ -1,0 +1,512 @@
+<html>
+  <head>
+    <title>My experiment</title>
+    <script src="jspsych/jspsych.js"></script>
+    <script src="jspsych/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="jspsych/plugins/jspsych-image-keyboard-response.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+      <script src = "jsdataframe/jsdataframe-min.js"></script>
+    <link href="jspsych/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+    <style>
+        #stim {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
+        .red_t {
+            background-color: red;
+        }
+        .green_t {
+            background-color: limegreen;
+        }
+        .plus {
+            color: limegreen;
+        }
+        .minus {
+            color: red;
+        }
+        #t_d {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            height: 10px;
+            width: 10px;
+        }
+    </style>
+</head>
+<body style="background-color:gray;"></body>
+<script>
+    //sets up data frame to use top-level functions
+    var jd = jsdataframe;
+    var enc_interval = 0;
+      
+    /**
+    * shuffle(a) - shuffles an array randomly
+    *   Inputs: [a] is an array
+    *   Returns: a shuffled array
+    */
+    function shuffle(a) {
+        var j, x, i;
+        for (i = a.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            x = a[i];
+            a[i] = a[j];
+            a[j] = x;
+        }
+        return a;
+    }
+      
+    /**
+    * getRandom(arr, n) - samples n values from an array
+    *   Inputs: [arr] is an array and [n] is an integer
+    *   Returns: an array of size [n] with values randomly sampled from [arr]
+    *   Throws: RangeError if [n] is greater than size of [arr]
+    */
+    function getRandom(arr, n) {
+        var result = new Array(n),
+        len = arr.length,
+        taken = new Array(len);
+        if (n > len)
+            throw new RangeError("getRandom: more elements taken than available");
+        while (n--) {
+            var x = Math.floor(Math.random() * len);
+            result[n] = arr[x in taken ? taken[x] : x];
+            taken[x] = --len in taken ? taken[len] : len;
+        }
+        return result;
+    }
+    
+    /**
+    * transpose(a) - Transposes a 2-D matrix
+    *   Inputs: [a] is a 2-D array
+    *   Returns: a transosed array
+    */
+    function transpose(a) {
+        return Object.keys(a[0]).map(function(c) {
+            return a.map(function(r) { return r[c]; });
+        });
+    }   
+    
+    /**
+    * shuffleImages(df) - shuffles the images so that there are no more than four 
+    * targets/distractors in a row
+    *   Inputs: [df] is a dataframe where the first column is the image name,
+    *   second column indicates whether image is a target, and last column indicates
+    *   whether the image is black or not
+    *   Returns: a shuffled dataframe in the original order of target/distractor and 
+    *   black/white conditions. However, the order of each subset of conditions is 
+    *   shuffled.
+    */
+    function shuffleImages(df) {
+        var shuffle_t = true;
+        
+        while (shuffle_t) {
+            df = jd.df(transpose(shuffle(df.toMatrix())), ['img','t','b']);
+            var targetSet = df.c('t').toArray();
+            shuffle_t = false;
+            for (var i = 0; i <= targetSet.length - 5; i++) {
+                if(targetSet[i] == targetSet[i+1] && targetSet[i+2] == targetSet[i+3] && targetSet[i+3] == targetSet[i+4] && targetSet[i+4] == targetSet[i]) {
+                    shuffle_t = true;
+                }
+            }
+        }
+        
+        return df;
+    }
+      
+    /** 
+    * getImages(dir, group) - finds the images required for the experiment
+    * and classifies each image as a target or not
+    *   Inputs: [dir] is a string representation of the directory to look at to find
+    *   the images. [group] is an integer representing the group number.
+    *   Returns: A shuffled dataframe where the first column indicates the image name,
+    *   the second column indicates whether the image is a target, and the last column 
+    *   indicates whether the image is a black face
+    *   Requires: [dir] must be a valid directory
+    */
+    function getImages(dir, group) {
+        var whiteImages = [];
+        var blackImages = [];
+        var imgList = [];
+        $.ajax({
+            //Retrieve contents of folder
+            url: dir,
+            async: false,
+            success: function (data) {
+                var blackRegex = /b.*.jpg/;
+                var whiteRegex = /w.*.jpg/;
+                $(data).find("a").filter(function () {
+                    if (blackRegex.test($(this).text())){
+                        blackImages.push($(this).text());
+                    } else if (whiteRegex.test($(this).text())) {
+                        whiteImages.push($(this).text());
+                    }
+                });
+            }
+        });
+        //Sets the number of targets to obtain for each group
+        var targetBlkImg = [];
+        var targetWhtImg = [];
+        if (group == 1) {
+            //targets to appear on 70% of black faces and 30% of white
+            targetBlkImg = getRandom(blackImages, 28);
+            targetWhtImg = getRandom(whiteImages, 12);
+        }
+        else {
+            //targets to appear on 30% of black faces and 70% of white
+            targetBlkImg = getRandom(blackImages, 12);
+            targetWhtImg = getRandom(whiteImages, 28);
+        }
+        //loop through black images and set which images are targets
+        for (var face in blackImages) {
+            if (targetBlkImg.includes(blackImages[face])) {
+                imgList.push([blackImages[face], true, true]);
+            } else {
+                imgList.push([blackImages[face], false, true]);
+            }
+        }
+        //loop through white images and set which images are targets
+        for (var face in whiteImages) {
+            if (targetWhtImg.includes(whiteImages[face])) {
+                imgList.push([whiteImages[face], true, false]);
+            } else {
+                imgList.push([whiteImages[face], false, false]);
+            }
+        }
+        
+        imgList = shuffle(imgList);
+        
+        return jd.df(transpose(imgList), ['img', 't', 'b']);
+    }
+    
+    /** 
+    * saveData(name, data) - saves the [data] to the specified filename [name] through an ajax call to php file write_data.php
+    * getImages(dir, group) - finds the images required for the experiment
+    *   Inputs: [encName] is the string representing encoding filename. [encData] is a string representation of the encoding data to be saved.
+        [memName] is the string representing memory filename. [memData] is a string representation of the memory data to be saved.
+    */
+    function saveData(encName, encData, memName, memData){
+        $.ajax({
+            type: 'POST',
+            url: 'write_data.php',
+            data: {encFilename: encName, encFiledata: encData, memFilename: memName, memFiledata: memData}
+        });
+    }
+    
+    /**
+    * finishedExp(participant, subject) - takes the participant and subject variables 
+    * and inputs them into the finishedexp mysql table by sending a POST call to 
+    * finished_exp.php
+    */
+    function finishedExp(participant, subject) {
+        $.ajax({
+            type: 'POST',
+            url: 'finished_exp.php',
+            async: false,
+            data: {participant: participant, subject: subject},
+            success: function (data) {
+                expSuccess = data;
+            }
+        });
+    }
+    
+    /**
+    * insertIP() - inserts an IP with an ajax call to php script insert_ip.php
+    */
+    function insertIP() {
+        $.ajax({
+            type: 'POST',
+            url: 'insert_ip.php',
+            data: {},
+            async: false,
+            success: function (data) {
+                participantID = parseInt(data);
+            }
+        });
+    }
+    
+    /**
+    * getSubjectID() - grabs a subjectid number from the mysql table and removes the
+    * value from the table. Returns -1 on failure and the subjectID on success.
+    */
+    function getSubjectID() {
+        $.ajax({
+            type: 'POST',
+            url: 'get_subject_id.php',
+            data: {},
+            async: false,
+            success: function (data) {
+                subjectNum = parseInt(data);
+            }
+        });
+        return -1;
+    }
+    /**
+    * dataString(arr) - creates a data string from a 2-D array where each element in the same row are separated by 
+    * tabs and subsequent lines are separated by new lines
+    *   Inputs: [arr] is a 2-D array
+    */
+    function dataString(arr) {
+        var dataString = '';
+        for (var i = 0; i < arr.length; i++) {
+            var element = arr[i];
+            for (var j = 0; j < element.length; j++) {
+                dataString += String(element[j])+"\t";
+            }
+            dataString += "\n";
+        }
+        return dataString;
+    }
+    
+    /*MAIN SCRIPT RUNS HERE*/
+      
+    /* create timeline */
+    var timeline = [];
+
+    var participantID;
+    var subjectNum;
+    insertIP();
+    if (participantID == -1) {
+        getSubjectID();
+    }
+    
+    /* sets up data variables */
+    
+    if (subjectNum % 4 <= 1) {
+        var subjectGroup = 1;
+    } else {
+        var subjectGroup = 2;
+    }
+      
+    if (subjectNum % 2 == 1) {
+        var redTarget = true;
+    } else {
+        var redTarget = false;
+    }
+    oldImages = getImages("./Stimuli/Old_Images", subjectGroup);
+    newImages = getImages("./Stimuli/New_Images", subjectGroup);
+    
+    
+    var encInstructions = {
+            type: 'html-keyboard-response',
+            stimulus: '<p class="textBox">Recognition and Encoding Tasks:</br>You will see a series of images in the following task.</br>Press the spacebar whenever you see a '+((redTarget) ? 'red' : 'green')+' square</br>Press the spacebar to continue.</p>',
+            choices: [32]
+    };
+    timeline.push(encInstructions);
+    
+    var encBlockOne = {
+        type: 'html-keyboard-response',
+        stimulus: '<p class="textBox">Block 1 will start now.</br>Press the spacebar to continue.</p>',
+        choices:[32]
+    };
+    timeline.push(encBlockOne);
+
+    /*ENCODING TASK STARTS HERE*/
+    var blockCount = 0;
+    var img = [];
+    var i;
+    var encodingData = [];
+    for (i = 0; i < 10; i++) {
+        oldImages = shuffleImages(oldImages);
+        stimImages = oldImages.c('img').toArray();
+        targetSet = oldImages.c('t').toArray();
+        bwSet = oldImages.c('b').toArray();
+        var j;
+        for (j = 0; j < 80; j++) {
+            if ((targetSet[j] && redTarget) || (!targetSet[j] && !redTarget)){
+                var blockID = "red_t";
+            }
+            else {
+                var blockID = "green_t";
+            }
+
+            var trial = {
+                type : 'html-keyboard-response',
+                choices: [32],
+                response_ends_trial	: false,
+                data: { img_name: stimImages[j], img_t: targetSet[j], img_b: bwSet[j], red_target: redTarget, block: i+1, task: 'enc' },
+                timeline: [
+                    {stimulus: '<img id = "stim" src="./Stimuli/Old_Images/'+stimImages[j]+'">', trial_duration: 50},
+                    {stimulus: '<img id = "stim" src="./Stimuli/Old_Images/'+stimImages[j]+'"><div id="t_d" class="'+blockID+'"></div>', trial_duration: 100},
+                    {stimulus: '<img id = "stim" src="./Stimuli/Old_Images/'+stimImages[j]+'">', trial_duration: 50},
+                    {stimulus: '<img id = "stim" src="./Stimuli/Scrambled_Old_Images/'+stimImages[j]+'">', trial_duration: 800}
+                ]
+            };
+            timeline.push(trial);
+            img.push('Stimuli/Old_Images/'+stimImages[j]);
+            img.push('Stimuli/Scrambled_Old_Images/'+stimImages[j]);
+        }
+        var blockStats = {
+            type: 'html-keyboard-response',
+            stimulus: '<p style="font-size: 48px;">+</p>',
+            choices: [32],
+            on_start: function(trial) {
+                //code here to calculate block stats
+                var rawData = jsPsych.data.get().filter({block: blockCount+1, task: 'enc'}).values();
+                var a;
+                var responseTimes = [];
+                var targetsResponded = 0;
+                var nonTargetsResponded = 0;
+                for (a = 0; a < 80; a++) {
+                    
+                    var phase2Rt = rawData[a*4+1].rt;
+                    var phase3Rt = rawData[a*4+2].rt;
+                    var phase4Rt = rawData[a*4+3].rt;
+                    var phaseRts = [];
+                    if (phase2Rt !== null) {
+                        phaseRts.push(phase2Rt);
+                    }
+                    if (phase3Rt !== null) {
+                        phaseRts.push(phase3Rt + 100);
+                    }
+                    if (phase4Rt !== null) {
+                        phaseRts.push(phase4Rt + 150);
+                    }
+                    
+                    if (phaseRts.length > 0) {
+                        //if subject responded in either three of these intervals
+                        responseTimes.push(Math.min(...phaseRts));
+                        if (rawData[a*4].img_t) {
+                            targetsResponded++;
+                        }
+                        else {
+                            nonTargetsResponded++;
+                        }
+                    }
+                    
+                    encodingData.push([
+                        rawData[a*4].subject,
+                        rawData[a*4].group,
+                        encodingData.length+1,
+                        rawData[a*4].img_name,
+                        rawData[a*4].img_t,
+                        rawData[a*4].img_b,
+                        redTarget,
+                        rawData[a*4].time_elapsed-50, //time that the stimuli has presented
+                        rawData[a*4+2].time_elapsed, //time that stimuli has exited
+                        ((phaseRts.length > 0) ? Math.min(...phaseRts) : null)
+                    ]);
+                }
+                responseTimes.sort((a, b) => a - b);
+                medResponseTime = (responseTimes[(responseTimes.length - 1) >> 1] + responseTimes[responseTimes.length >> 1]) / 2;
+                trial.stimulus = '<p class="textBox">Block '+(blockCount+1)+' complete. Here are your results:</br>Percentage of targets you responded to: '+(targetsResponded/40.0)*100.0+'%</br>Number of times you responded to non-targets: '+ nonTargetsResponded+'</br>Median response time: ' + medResponseTime + '</br>' + ((blockCount+1 < 10) ? 'Block ' + (blockCount+2) +' will start now.</br>' : '') + 'Press the spacebar to continue.</p>';
+                
+                blockCount++;
+            }
+        };
+        timeline.push(blockStats);     
+    }
+    
+    /*MEMORY TASK STARTS HERE*/
+      
+    var oldImg = oldImages.c('img').toArray();
+    var newImg = newImages.c('img').toArray();
+    var memorySequence = [];
+    var memData = [];
+    for(var i = 0; i < 80; i++) {
+        memorySequence.push([oldImg[i], 1]);
+        memorySequence.push([newImg[i], 0]);
+        img.push('Stimuli/New_Images/'+newImg[i]);
+    }  
+    memorySequence = shuffle(memorySequence);
+    memTrialCount = 0;
+    
+    var memInstructions = {
+            type: 'html-keyboard-response',
+            stimulus: '<p class="textBox">Recognition Memory Tasks:</br>You will see a series of images in the following task.</br>Press "z" key if you think it was presented previously</br>and press the "x" key if you think it is a new image</br>For each image also rate your confidence by pressing a number key from 1-7. Press spacebar to continue.</p>',
+            choices: [32]
+    };
+    timeline.push(memInstructions);
+    
+    for (var i = 0; i < 160; i++) {
+        fileDir = (memorySequence[i][1] ? "./Stimuli/Old_Images/" : "./Stimuli/New_Images/")+memorySequence[i][0];
+        var memTrial = {
+                type : 'html-keyboard-response',
+                response_ends_trial	: true,
+                timeline: [
+                    {stimulus: '<p class="textBox">Old Image or New Image?</p><img id = "stim" src = "'+fileDir+'">',
+                     //90 is charcode for z, 88 for x
+                    data: {mem_part: 'img', correct_response: (memorySequence[i][1] ? 90: 88), img_name: memorySequence[i][0], old_img: memorySequence[i][1], task: 'mem'}, choices: ['z', 'x']},
+                    {stimulus: '<p class="textBox">Confidence Level: </br> 1 2   3   4   5   6   7</p>',
+                    data: {mem_part: 'conf', img_name: memorySequence[i][0], old_img: memorySequence[i][1], task: 'mem'}, choices: ['1','2','3','4','5','6','7']},
+                    {stimulus: '', choices: jsPsych.NO_KEYS, trial_duration: 300,
+                     on_start: function(trial) {
+                         var rawDataImg = jsPsych.data.get().filter({task: 'mem', img_name: memorySequence[memTrialCount][0], old_img: memorySequence[memTrialCount][1], mem_part: 'img'}).values();
+                         var rawDataConf = jsPsych.data.get().filter({task: 'mem', img_name: memorySequence[memTrialCount][0], old_img: memorySequence[memTrialCount][1], mem_part: 'conf'}).values();
+                         
+                         if (rawDataImg[0].key_press == rawDataImg[0].correct_response) {
+                             trial.stimulus = '<h1 class="plus textBox">+</h1>';
+                         }
+                         else {
+                             trial.stimulus = '<h1 class="minus textBox">-</h1>';
+                         }
+                         memData.push([
+                             rawDataImg[0].subject,
+                             rawDataImg[0].group,
+                             memData.length+1,
+                             memorySequence[memTrialCount][0], //image name
+                             memorySequence[memTrialCount][1], //whether its an old image or not
+                             rawDataImg[0].key_press == 90, //whether the user chose old image
+                             rawDataImg[0].rt, //response time for image
+                             rawDataConf[0].key_press, //confidence level
+                             rawDataConf[0].rt //response time for confidence level
+                         ]);
+                         memTrialCount++;
+                     }}
+                ]
+            };
+        timeline.push(memTrial);
+        if (i % 20 == 19) {
+            var breakTrial = {
+                type : 'html-keyboard-response',
+                response_ends_trial: true,
+                choices:[32],
+                stimulus: '<p class="textBox">'+(i+1)+'/160 complete. </br>Press spacebar to continue</p>'
+            }
+            timeline.push(breakTrial);
+        }        
+    }
+    
+    /*SETUP REST OF EXPERIMENT*/
+    jsPsych.data.addProperties({
+        subject: subjectNum,
+        group: subjectGroup
+    });
+
+
+    var endTrial = {
+            type: 'html-keyboard-response',
+            choices: jsPsych.NO_KEYS,
+            stimulus: '<p class="textBox">It looks like you\'ve completed all or part of this experiment. Thanks for participating.</p>',
+            on_start: function(trial){
+                finishedExp(participantID, subjectNum);
+                var encDataString = dataString(encodingData);
+                var memDataString = dataString(memData);
+                console.log(memDataString);
+                saveData("subject_num_"+subjectNum+"_group_"+subjectGroup+"_encoding.txt", encDataString, "subject_num_"+subjectNum+"_group_"+subjectGroup+"_memory.txt", memDataString);
+            }
+        };
+    
+    if (participantID == -1) {
+        timeline = [endTrial];
+    }
+    else {
+        timeline.push(endTrial);
+    }
+    
+    if (subjectNum == -1) {
+        console.log("subject num: " + subjectNum + ", participantID: " + participantID);
+        timeline = [{
+            type: 'html-keyboard-response',
+            choices: jsPsych.NO_KEYS,
+            stimulus: '<p class="textBox">Sorry this experiment is no longer accepting responses.</p>'
+        }];
+    }
+    
+    jsPsych.init({
+        timeline: timeline,
+        preload_images: img
+    });
+  </script>
+  </html>

@@ -26,7 +26,7 @@
     - `create table subjectsAvail(subjectid INT(5) UNSIGNED);`
     - `create table finishedExp (subjectid INT(5) UNSIGNED, participant INT(6) UNSIGNED,FOREIGN KEY (participant) REFERENCES IPADDR(participant));`
     - `ALTER TABLE subjectsavail ADD UNIQUE(subjectid);`
-6. You should be all set to open [experiment.html](experiment.html) in a new browser window
+6. You should be all set to open [experiment.html](experiment.html) in a new browser window (go to localhost/experiment.html)
 
 ### Notes:
 1. You can only run the experiment.html once before it records your ip address and prevents you from running it again. To run the experiment again you need to run the following commands in mysql shell:
