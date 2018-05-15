@@ -19,14 +19,12 @@
     - write_data.php
     - get_subject_id.php
     - finished_exp.php
+    - mysql_commands.sql
 3. Now you need to create the MySQL tables necessary for base functionality. Open up XAMPP and click on shell.
 4. In the shell run the command `mysql -u root -p` and press enter when prompted for password
-5. Run the following commands in the shell:
-    - `create table IPAddr (participant INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, ips varchar(45)  NOT NULL);`
-    - `create table subjectsAvail(subjectid INT(5) UNSIGNED);`
-    - `create table finishedExp (subjectid INT(5) UNSIGNED, participant INT(6) UNSIGNED,FOREIGN KEY (participant) REFERENCES IPADDR(participant));`
-    - `ALTER TABLE subjectsavail ADD UNIQUE(subjectid);`
-6. You should be all set to open [experiment.html](experiment.html) in a new browser window (go to localhost/experiment.html)
+5. Run `use test;` in the terminal
+6. Run `source mysql_commands.sql` in the termina
+7. You should be all set to open [experiment.html](experiment.html) in a new browser window (go to localhost/experiment.html)
 
 ### Notes:
 1. You can only run the experiment.html once before it records your ip address and prevents you from running it again. To run the experiment again you need to run the following commands in mysql shell:
