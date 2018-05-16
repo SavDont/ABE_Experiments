@@ -22,9 +22,10 @@
     - mysql_commands.sql
 3. Now you need to create the MySQL tables necessary for base functionality. Open up XAMPP and click on shell.
 4. In the shell run the command `mysql -u root -p` and press enter when prompted for password
-5. Run `use test;` in the terminal
-6. Run `source mysql_commands.sql` in the termina
-7. You should be all set to open [experiment.html](experiment.html) in a new browser window (go to localhost/experiment.html)
+5. Run `create database ABE`
+6. Run `use test;` in the terminal
+7. Run `source mysql_commands.sql` in the terminal
+8. You should be all set to open [experiment.html](experiment.html) in a new browser window (go to localhost/experiment.html)
 
 ### Notes:
 1. You can only run the experiment.html once before it records your ip address and prevents you from running it again. To run the experiment again you need to run the following commands in mysql shell:
