@@ -174,7 +174,6 @@
                 imgList.push([whiteImages[face], false, false]);
             }
         }
-        
         imgList = shuffle(imgList);
         
         return jd.df(transpose(imgList), ['img', 't', 'b']);
@@ -344,7 +343,7 @@
     for (i = 0; i < 10; i++) {
         oldImages = shuffleImages(oldImages);
         stimImages = oldImages.c('img').toArray();
-        targetSet = oldImages.c('t').toArray();
+	targetSet = oldImages.c('t').toArray();
         bwSet = oldImages.c('b').toArray();
         var j;
         for (j = 0; j < 80; j++) {
