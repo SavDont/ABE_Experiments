@@ -242,6 +242,33 @@
         });
         return -1;
     }
+    
+    /**
+    * resetSubjectID() - takes the subjectNum and adds it back to the mysql table for
+    * subjects available. Returns nothing
+    */
+    function resetSubjectID() {
+        $.ajax({
+            type: 'POST',
+            url: 'reset_subject_id.php',
+            data: {subject: subjectNum},
+            async: false
+        })
+    }
+    
+    /**
+    * resetIpAddr() - takes the particpantID and removes that field from the mysql table
+    * holding all the ip addresses that have currently taken part in the experiment.
+    * Returns nothing
+    */
+    function resetIpAddr() {
+        $.ajax({
+            type: 'POST',
+            url: 'reset_ip_addr.php',
+            data: {participant: participantID},
+            async: false
+        })
+    }
     /**
     * dataString(arr) - creates a data string from a 2-D array where each element in the same row are separated by 
     * tabs and subsequent lines are separated by new lines
@@ -267,9 +294,16 @@
     var participantID;
     var subjectNum;
     insertIP();
-    if (participantID != -1) {
-        getSubjectID();
+    getSubjectID();
+    if (participantID == -1 && subjectNum != -1) {
+        //adds the subject num back to the database
+        resetSubjectID();
     }
+    else if (subjectNum == -1 && participantID != -1) {
+        //removes the ip address from the table
+        resetIpAddr();
+    }
+
     
     /* sets up data variables */
     

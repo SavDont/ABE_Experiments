@@ -19,6 +19,8 @@
     - write_data.php
     - get_subject_id.php
     - finished_exp.php
+    - reset_subject_id.php
+    - reset_ip_addr.php
     - mysql_commands.sql
 3. Now you need to create the MySQL tables necessary for base functionality. Open up XAMPP and click on shell.
 4. In the shell run the command `mysql -u root -p` and press enter when prompted for password
