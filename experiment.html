@@ -423,7 +423,7 @@
                 }
                 responseTimes.sort((a, b) => a - b);
                 medResponseTime = (responseTimes[(responseTimes.length - 1) >> 1] + responseTimes[responseTimes.length >> 1]) / 2;
-                trial.stimulus = '<p class="textBox">Block '+(blockCount+1)+' complete. Here are your results:</br>Percentage of targets you responded to: '+(targetsResponded/40.0)*100.0+'%</br>Number of times you responded to non-targets: '+ nonTargetsResponded+'</br>Median response time: ' + medResponseTime + '</br>' + ((blockCount+1 < 10) ? 'Block ' + (blockCount+2) +' will start now.</br>' : '') + 'Press the spacebar to continue.</p>';
+                trial.stimulus = '<p class="textBox">Block '+(blockCount+1)+' complete. Here are your results:</br>Percentage of targets you responded to: '+Math.round((targetsResponded/40.0)*100.0)+'%</br>Number of times you responded to non-targets: '+ nonTargetsResponded+'</br>Median response time: ' + medResponseTime + '</br>' + ((blockCount+1 < 10) ? 'Block ' + (blockCount+2) +' will start now.</br>' : '') + 'Press the spacebar to continue.</p>';
                 
                 blockCount++;
             }
