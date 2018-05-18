@@ -27,7 +27,8 @@
 5. Run `create database ABE`
 6. Run `use ABE;` in the terminal
 7. Run `source mysql_commands.sql` in the terminal
-8. You should be all set to open [experiment.html](experiment.html) in a new browser window (go to localhost/experiment.html)
+8. Create a folder named *data* if it is not already present
+9. You should be all set to open [experiment.html](experiment.html) in a new browser window (go to localhost/experiment.html)
 
 ### Notes:
 1. You can only run the experiment.html once before it records your ip address and prevents you from running it again. To run the experiment again you need to run the following commands in mysql shell:

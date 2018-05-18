@@ -319,7 +319,189 @@
     }
     oldImages = getImages("./Stimuli/Old_Images", subjectGroup);
     newImages = getImages("./Stimuli/New_Images", subjectGroup);
+    var consented = false;
     
+    var consentForm = {
+        type: 'html-button-response',
+        //below is the consent form, converted to html from doc via an online converter
+        stimulus: '<DIV TYPE=HEADER>\
+	<P ALIGN=RIGHT STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Attention,\
+	Memory and Attitude Consent Form - Online</B></FONT></FONT></FONT></FONT></P>\
+	<P STYLE="margin-bottom: 0in"><BR>\
+	</P>\
+</DIV>\
+<P STYLE="margin-bottom: 0in"><A NAME="_GoBack"></A><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>I\
+am asking you to participate in a research study. This form is\
+designed to give you information about this study. </FONT></FONT></FONT></FONT></FONT>\
+</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Project\
+Title:</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>			Attention,\
+Memory and Attitude </FONT></FONT></FONT></FONT></FONT>\
+</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Principal\
+Investigator: 	</B></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>Khena\
+M. Swallow</FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-left: 2in; margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>Department\
+of Psychology</FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-left: 1.5in; text-indent: 0.5in; margin-bottom: 0in">\
+<FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><A HREF="mailto:kms424@cornell.edu"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>kms424@cornell.edu</FONT></FONT></FONT></A></FONT></FONT></P>\
+<P STYLE="margin-left: 1.5in; text-indent: 0.5in; margin-bottom: 0in">\
+<BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>What\
+the study is about</B></FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>You\
+are being asked to participate in a research study conducted by Prof.\
+Khena M. Swallow of Cornell University. The purpose of this research\
+is to examine how attending to important events influences memory and\
+attitudes.</FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><B>What we will ask you to do</B></P>\
+<P STYLE="margin-bottom: 0in">For this experiment, we will ask you to\
+perform detection and memory tasks on the computer<FONT COLOR="#ac1600"><FONT COLOR="#000000"><FONT FACE="Calibri, serif">.\
+Other tasks will ask you about your attitudes toward certain images,\
+such as pictures of non-English characters, and your feelings toward\
+different races. </FONT></FONT></FONT><FONT FACE="Calibri, serif">We\
+also will ask you to complete a questionnaire that will give us more\
+information about you and your background. </FONT>We will record your\
+responses and when you made them. \
+</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in">Your participation is expected to take\
+<FONT FACE="Calibri, serif">60 and 90 minutes</FONT>.</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Risks\
+and Discomforts</B></FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT FACE="Calibri, serif"><SPAN STYLE="font-weight: normal">We\
+do not anticipate any risks from participating in this research.\
+However, you may experience mild boredom, fatigue, or eyestrain that\
+is consistent with performing computer based tasks. We do not expect\
+these discomforts to be any greater than what you would experience\
+from working on a computer for the same period of time. </SPAN></FONT></FONT>\
+</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Benefits</B></FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>There\
+are no direct benefits associated with participating in this\
+research. However, information from this study may help us learn more\
+about how attending to events influences memory and attitudes.</FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Compensation</B></FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Calibri, serif">We will\
+compensate you with $15 for completing this study, which we expect\
+will take between 60 and 90 minutes to complete. You may withdraw\
+from the study at any time. However, you will need to complete all\
+tasks as instructed to receive compensation. </FONT>\
+</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Confidentiality</B></FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>We\
+will make every effort to keep your participation in this study\
+confidential. However, because the data will be collected online and\
+stored in servers, there is always the risk that it could be accessed\
+by third parties. We will store any identifying information we\
+collect from you separately from your data. Electronic data files are\
+stored on password protected computers. The data will be used for\
+research and educational purposes, such as teaching, publications,\
+and/or presentations. </FONT></FONT></FONT><FONT FACE="Calibri, serif"><FONT SIZE=3><SPAN STYLE="font-weight: normal">Data\
+may exist on backups and server logs beyond the timeframe of this\
+research project. Your confidentiality will be kept to the degree\
+permitted by the technology being used. We cannot guarantee against\
+interception of data sent via the internet by third parties.</SPAN></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>\
+</FONT></FONT></FONT></FONT></FONT>\
+</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>Please\
+note that some of the surveys are being conducted with the help of\
+Qualtrics, a company not affiliated with Cornell and with its own\
+privacy and security policies that you can find at its website. We\
+anticipate that your participation in this survey presents no greater\
+risk than everyday use of the Internet. Please note that email and\
+Internet communication may not be private or secure. Though we take\
+precautions to protect your privacy, you should be aware that\
+information sent through e-mail could be read by a third party.</FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Calibri, serif">Data\
+Sharing </FONT>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT COLOR="#000000"><FONT FACE="Calibri, serif">De-identified\
+data from this study may be shared with the research community at\
+large to advance science and health. We will remove or code any\
+personal information that could identify you before files are shared\
+with other researchers to ensure that, by current scientific\
+standards and known methods, no one will be able to identify you from\
+the information we share. Despite these measures, we cannot guarantee\
+anonymity of your personal data.</FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Taking\
+part is voluntary</B></FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT FACE="Calibri, serif">Your\
+participation in this study is completely voluntary. If you decide to\
+participate, you are free to withdraw at any time. However, you\
+should also know that, if you withdraw, the data you provided for the\
+study may remain in our database. Your decision to participate in or\
+withdraw from this study will not affect your current or future\
+relationship with Cornell University.</FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>If\
+you have questions</B></FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>The\
+main researcher conducting this study is Khena M. Swallow, an\
+Assistant Professor of psychology at Cornell University. Please ask\
+any questions you have now. If you have questions later, you may\
+contact the co-investigator, Amy Krosch, at <A HREF="mailto:ark256@cornell.edu">ark256@cornell.edu</A>\
+or at </FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>607-255-6395,\
+</FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>and\
+the principal investigator Khena M. Swallow at </FONT></FONT></FONT><FONT COLOR="#011994"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>kms424@cornell.edu\
+</FONT></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>or\
+at 607-255-4387. If you have any questions or concerns regarding your\
+rights as a subject in this study, you may contact the Institutional\
+Review Board (IRB) for Human Participants at 607-255-5138 or access\
+their website at </FONT></FONT></FONT><FONT COLOR="#011994"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>http://www.irb.cornell.edu</FONT></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>.\
+You may also report your concerns or complaints anonymously through\
+Ethicspoint online at </FONT></FONT></FONT><FONT COLOR="#011994"><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>www.hotline.cornell.edu\
+</FONT></FONT></FONT></FONT><FONT COLOR="#000000"><FONT FACE="Calibri, serif"><FONT SIZE=3>or\
+by calling toll free at 1-866-293-3077. Ethicspoint is an independent\
+organization that serves as a liaison between the University and the\
+person bringing the complaint so that anonymity can be ensured.</FONT></FONT></FONT></FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT FACE="Calibri, serif">You\
+can copy this form to keep for your records.  </FONT></FONT>\
+</P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT FACE="Calibri, serif">Statement\
+of Consent</FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT FACE="Calibri, serif">By\
+completing the study you are agreeing to participate in the research.</FONT></FONT></P>\
+<P STYLE="margin-bottom: 0in"><BR>\
+</P>',
+        choices: ['Decline', 'Agree'],
+        on_finish: function(data) {
+            if (data.button_pressed == 1) {
+                consented = true;
+            }
+            else {
+                consented = false;
+            }
+        }
+    };
+    timeline.push(consentForm);
     
     var encInstructions = {
             type: 'html-keyboard-response',
@@ -534,6 +716,13 @@
             type: 'html-keyboard-response',
             choices: jsPsych.NO_KEYS,
             stimulus: '<p class="textBox">Sorry this experiment is no longer accepting responses.</p>'
+        }];
+    }
+    if (!consented) {
+        timeline = [{
+            type: 'html-keyboard-response',
+            choices: jsPsych.NO_KEYS,
+            stimulus: '<p class="textBox">Sorry we cannot proceed without your consent.</p>'
         }];
     }
     
