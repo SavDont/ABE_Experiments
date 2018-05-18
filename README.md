@@ -37,3 +37,9 @@
     - `insert into subjectsavail (subject) values (5), (8), (9);`
     
 5, 8, and 9 can be replaced with any other subject ids and you can add more than three at a time.
+
+## Copying data files from the AWS server
+1. Make sure you are in the same folder as the .pem file
+2. Make sure you have a folder in the same directory called data
+3. Run `scp -i your_pem_file.pem ec2-user@ec2-54-162-127-135.compute-1.amazonaws.com:/var/www/html/ABE_Experiments/data*.txt ./data/`
+    - You can replace `./data/` with any directory you choose to copy the data to
