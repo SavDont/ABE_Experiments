@@ -319,7 +319,6 @@
     }
     oldImages = getImages("./Stimuli/Old_Images", subjectGroup);
     newImages = getImages("./Stimuli/New_Images", subjectGroup);
-    var consented = false;
     
     var consentForm = {
         type: 'html-button-response',
@@ -491,15 +490,7 @@ of Consent</FONT></FONT></P>\
 completing the study you are agreeing to participate in the research.</FONT></FONT></P>\
 <P STYLE="margin-bottom: 0in"><BR>\
 </P>',
-        choices: ['Decline', 'Agree'],
-        on_finish: function(data) {
-            if (data.button_pressed == 1) {
-                consented = true;
-            }
-            else {
-                consented = false;
-            }
-        }
+        choices: ['I Agree'],
     };
     timeline.push(consentForm);
     
@@ -716,13 +707,6 @@ completing the study you are agreeing to participate in the research.</FONT></FO
             type: 'html-keyboard-response',
             choices: jsPsych.NO_KEYS,
             stimulus: '<p class="textBox">Sorry this experiment is no longer accepting responses.</p>'
-        }];
-    }
-    if (!consented) {
-        timeline = [{
-            type: 'html-keyboard-response',
-            choices: jsPsych.NO_KEYS,
-            stimulus: '<p class="textBox">Sorry we cannot proceed without your consent.</p>'
         }];
     }
     
