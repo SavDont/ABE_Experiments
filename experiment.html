@@ -321,7 +321,7 @@
     newImages = getImages("./Stimuli/New_Images", subjectGroup);
     
     var consentForm = {
-        type: 'html-button-response',
+        type: 'html-keyboard-response',
         //below is the consent form, converted to html from doc via an online converter
         stimulus: '<DIV TYPE=HEADER>\
 	<P ALIGN=RIGHT STYLE="margin-bottom: 0in"><FONT FACE="Helvetica, serif"><FONT SIZE=2 STYLE="font-size: 9pt"><FONT FACE="Calibri, serif"><FONT SIZE=3><B>Attention,\
@@ -489,8 +489,8 @@ of Consent</FONT></FONT></P>\
 <P STYLE="margin-bottom: 0in"><FONT FACE="Times New Roman, serif"><FONT FACE="Calibri, serif">By\
 completing the study you are agreeing to participate in the research.</FONT></FONT></P>\
 <P STYLE="margin-bottom: 0in"><BR>\
-</P>',
-        choices: ['I Agree'],
+Press spacebar to continue</P>',
+        choices: [32],
     };
     timeline.push(consentForm);
     
